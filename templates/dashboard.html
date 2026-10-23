@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard | SmartAttend</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="sa-app">
+<aside class="sa-sidebar" id="sidebar">
+    <a class="sa-brand" href="{{ url_for('dashboard') }}">
+        <span>S</span>
+        <b>SmartAttend<small>Admin workspace</small></b>
+    </a>
+
+    <div class="sa-nav-label">Administration</div>
+    <nav>
+        <a class="sa-nav active" href="{{ url_for('dashboard') }}">▦ Dashboard</a>
+        <a class="sa-nav" href="{{ url_for('students') }}">♙ Students</a>
+        <a class="sa-nav" href="{{ url_for('add_student') }}">＋ Register student</a>
+        <a class="sa-nav" href="{{ url_for('attendance') }}">◷ Attendance</a>
+        <a class="sa-nav" href="{{ url_for('export_report') }}">▤ Export reports</a>
+        <a class="sa-nav sa-nav-kiosk"
+           href="{{ url_for('kiosk') }}"
+           target="_blank" rel="noopener">◎ Open camera kiosk ↗</a>
+    </nav>
+
+    <div class="sa-sidebar-bottom">
+        <div class="sa-admin-mini">
+            <span>{{ admin_username[0]|upper }}</span>
+            <div>
+                <b>{{ admin_username }}</b>
+                <small>Administrator</small>
+            </div>
+        </div>
+        <a class="sa-logout" href="{{ url_for('logout') }}">↪ Sign out</a>
+    </div>
+</aside>
+
+<main class="sa-main">
+    <header class="sa-topbar">
+        <button id="menuToggle" class="sa-menu"
+                type="button" aria-label="Toggle menu">☰</button>
+        <div>
+            <small>WORKSPACE / OVERVIEW</small>
+            <h1>Admin dashboard</h1>
+        </div>
+        <div class="sa-top-user">
+            <span class="sa-live-dot"></span>
+            {{ admin_username }}
+        </div>
+    </header>
+
+    <div class="sa-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="sa-alert {{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="sa-hero">
+            <div>
+                <span class="sa-hero-kicker">SMARTATTEND · ADMIN PORTAL</span>
+                <h2>Welcome back, {{ admin_username }}!</h2>
+                <p>Manage student profiles and monitor attendance.</p>
+                <a class="sa-btn sa-btn-white"
+                   href="{{ url_for('students') }}">Manage students →</a>
+            </div>
+            <div class="sa-hero-emoji" aria-hidden="true">🎓</div>
+        </section>
+
+        <section class="sa-section">
+            <div class="sa-section-heading">
+                <div>
+                    <h2>System overview</h2>
+                    <p>Live totals from your SQLite database.</p>
+                </div>
+            </div>
+
+            <div class="sa-stats">
+                <article class="sa-stat">
+                    <span class="sa-stat-icon purple">♙</span>
+                    <span>Total students</span>
+                    <strong>{{ total_students }}</strong>
+                    <a href="{{ url_for('students') }}">Manage students →</a>
+                </article>
+
+                <article class="sa-stat">
+                    <span class="sa-stat-icon green">✓</span>
+                    <span>All attendance records</span>
+                    <strong>{{ total_attendance }}</strong>
+                    <a href="{{ url_for('attendance') }}">View records →</a>
+                </article>
+
+                <article class="sa-stat">
+                    <span class="sa-stat-icon blue">◷</span>
+                    <span>Attendance today</span>
+                    <strong>{{ today_attendance }}</strong>
+                    <a href="{{ url_for('attendance') }}">View attendance →</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="sa-section">
+            <div class="sa-section-heading">
+                <div>
+                    <h2>Quick actions</h2>
+                    <p>Choose the task you want to perform.</p>
+                </div>
+            </div>
+
+            <div class="sa-actions">
+                <a class="sa-action" href="{{ url_for('add_student') }}">
+                    <span class="purple">＋</span>
+                    <b>Register student</b>
+                    <small>Add details and enroll a face photo.</small>
+                    <i>→</i>
+                </a>
+
+                <a class="sa-action" href="{{ url_for('students') }}">
+                    <span class="blue">♙</span>
+                    <b>Manage students</b>
+                    <small>Search, update and delete student records.</small>
+                    <i>→</i>
+                </a>
+
+                <a class="sa-action" href="{{ url_for('kiosk') }}"
+                   target="_blank" rel="noopener">
+                    <span class="green">◎</span>
+                    <b>Open camera kiosk</b>
+                    <small>Launch the separate attendance screen.</small>
+                    <i>↗</i>
+                </a>
+
+                <a class="sa-action" href="{{ url_for('export_report') }}">
+                    <span class="orange">▤</span>
+                    <b>Export report</b>
+                    <small>Download attendance as a CSV file.</small>
+                    <i>→</i>
+                </a>
+            </div>
+        </section>
+
+        <footer class="sa-footer">
+            SmartAttend · Private administrator workspace
+        </footer>
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

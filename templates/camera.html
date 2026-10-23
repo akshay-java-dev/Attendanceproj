@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Live Attendance | SmartAttend</title>
+    <style>
+        :root {
+            --ink: #19233d;
+            --muted: #6f7890;
+            --primary: #5a4bf2;
+            --primary-dark: #4536d8;
+            --line: #e6eaf3;
+            --green: #12834b;
+            --green-bg: #e9f9ef;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; color: var(--ink);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 8% 5%, rgba(91,75,242,.11), transparent 28%),
+                radial-gradient(circle at 95% 90%, rgba(29,180,115,.08), transparent 25%),
+                #f5f7fc;
+        }
+        .kiosk-top {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; padding: 18px clamp(18px, 4vw, 54px);
+            background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line);
+            box-shadow: 0 4px 22px rgba(26,35,61,.04);
+        }
+        .brand { display:flex; align-items:center; gap:12px; font-weight:850; letter-spacing:-.4px; }
+        .brand-mark {
+            display:grid; place-items:center; width:44px; height:44px; border-radius:14px;
+            color:#fff; background:linear-gradient(135deg,#7d70ff,#4c3bdc);
+            box-shadow:0 8px 20px rgba(90,75,242,.25); font-size:21px;
+        }
+        .brand small { display:block; color:var(--muted); font-size:11px; font-weight:600; letter-spacing:.3px; }
+        .online {
+            display:flex; align-items:center; gap:8px; padding:9px 13px;
+            border:1px solid #ccefd9; border-radius:999px; background:var(--green-bg);
+            color:var(--green); font-size:12px; font-weight:800;
+        }
+        .dot { width:8px; height:8px; border-radius:50%; background:#19b96d; box-shadow:0 0 0 4px rgba(25,185,109,.12); animation:pulse 1.8s infinite; }
+        .page { width:min(1280px, 100%); margin:0 auto; padding:34px clamp(16px, 4vw, 42px) 28px; }
+        .intro { text-align:center; margin:5px auto 26px; animation:rise .55s ease both; }
+        .eyebrow { color:var(--primary); font-size:11px; font-weight:900; letter-spacing:2px; text-transform:uppercase; }
+        h1 { margin:10px 0 8px; font-size:clamp(27px,4vw,39px); letter-spacing:-1.2px; }
+        .intro p { margin:0; color:var(--muted); font-size:14px; }
+        .workspace { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(260px,.8fr); gap:22px; align-items:start; }
+        .panel { overflow:hidden; border:1px solid var(--line); border-radius:20px; background:#fff; box-shadow:0 16px 45px rgba(27,37,68,.07); animation:rise .65s ease both; }
+        .panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 21px; border-bottom:1px solid var(--line); }
+        .panel-head h2 { margin:0; font-size:15px; }
+        .panel-head p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+        .camera-label { color:#e8eaff; background:#252c49; padding:7px 10px; border-radius:8px; font-size:11px; font-weight:800; }
+        .camera-stage { min-height:350px; padding:15px; display:grid; place-items:center; background:linear-gradient(145deg,#10172d,#1d2947); }
+        .camera-stage img { display:block; width:100%; max-height:620px; min-height:250px; object-fit:contain; border-radius:12px; background:#0b1020; }
+        .camera-foot { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:15px 20px; border-top:1px solid var(--line); }
+        .camera-foot p { margin:0; color:var(--muted); font-size:12px; }
+        .btn { display:inline-flex; justify-content:center; align-items:center; gap:8px; min-height:41px; padding:10px 15px; border:0; border-radius:10px; text-decoration:none; font-size:12px; font-weight:800; cursor:pointer; transition:transform .18s, box-shadow .18s, background .18s; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(25,35,61,.13); }
+        .btn-primary { color:white; background:var(--primary); }
+        .btn-primary:hover { background:var(--primary-dark); }
+        .btn-light { color:var(--ink); background:#f0f2f8; }
+        .side-stack { display:grid; gap:18px; }
+        .status-card { padding:22px; }
+        .status-card h2 { margin:0 0 14px; font-size:16px; }
+        .status-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 11px; border-radius:999px; color:var(--green); background:var(--green-bg); font-size:12px; font-weight:800; }
+        .status-pill .dot { width:7px; height:7px; animation:none; box-shadow:none; }
+        .steps { display:grid; gap:15px; margin:18px 0 0; padding:0; list-style:none; }
+        .steps li { display:flex; align-items:flex-start; gap:11px; color:#4f5a73; font-size:13px; }
+        .step-no { flex:0 0 26px; display:grid; place-items:center; width:26px; height:26px; border-radius:8px; color:var(--primary); background:#efedff; font-size:11px; font-weight:900; }
+        .notice { padding:15px; border:1px solid #e8e5ff; border-radius:12px; background:#f7f6ff; color:#5b5688; font-size:12px; line-height:1.6; }
+        .kiosk-bottom { padding:18px; text-align:center; color:#939bb0; font-size:11px; }
+        .error { display:none; margin:14px 20px 0; padding:12px; border-radius:10px; color:#a52c2c; background:#fff0f0; font-size:12px; }
+        @keyframes rise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100% { box-shadow:0 0 0 4px rgba(25,185,109,.12); } 50% { box-shadow:0 0 0 7px rgba(25,185,109,.03); } }
+        @media (max-width:850px) { .workspace { grid-template-columns:1fr; } .camera-stage { min-height:250px; } }
+        @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+    </style>
+</head>
+<body>
+    <header class="kiosk-top">
+        <div class="brand">
+            <span class="brand-mark">S</span>
+            <span>SmartAttend<small>LIVE ATTENDANCE KIOSK</small></span>
+        </div>
+        <span class="online"><span class="dot"></span> Attendance station</span>
+    </header>
+
+    <main class="page">
+        <section class="intro">
+            <div class="eyebrow">Face recognition · Automatic check-in</div>
+            <h1>Live Attendance</h1>
+            <p>Look toward the camera. Registered students are recognized and attendance is recorded automatically.</p>
+        </section>
+
+        <section class="workspace">
+            <article class="panel">
+                <div class="panel-head">
+                    <div><h2>Live camera feed</h2><p>Stand in good lighting and keep your face visible.</p></div>
+                    <span class="camera-label">● LIVE</span>
+                </div>
+                <div class="camera-stage">
+                    <img id="cameraFeed" src="{{ url_for('video_feed') }}" alt="Live face recognition camera feed">
+                </div>
+                <div id="cameraError" class="error">The camera feed could not load. Check that the webcam is connected and the server terminal has no camera/model errors.</div>
+                <div class="camera-foot">
+                    <p>Attendance is recorded once per student per day.</p>
+                    <button class="btn btn-primary" type="button" onclick="refreshFeed()">↻ Refresh camera</button>
+                </div>
+            </article>
+
+            <aside class="side-stack">
+                <section class="panel status-card">
+                    <h2>How it works</h2>
+                    <span class="status-pill"><span class="dot"></span> Ready for scanning</span>
+                    <ol class="steps">
+                        <li><span class="step-no">1</span><span><strong>Face the camera</strong><br>Remove anything covering your face where possible.</span></li>
+                        <li><span class="step-no">2</span><span><strong>Wait for recognition</strong><br>Use a clear, front-facing view with good light.</span></li>
+                        <li><span class="step-no">3</span><span><strong>Attendance is saved</strong><br>Only a registered face can match a student record.</span></li>
+                    </ol>
+                </section>
+                <section class="panel status-card">
+                    <h2>Scanning guidance</h2>
+                    <div class="notice">If your name is not recognized, ask the administrator to register your student profile and a clear face photo. Do not use another student's profile.</div>
+                    <p style="margin:16px 0 0"><a class="btn btn-light" href="{{ url_for('login') }}">Administrator sign in</a></p>
+                </section>
+            </aside>
+        </section>
+        <footer class="kiosk-bottom">SmartAttend · Live attendance station · Keep this page open during check-in</footer>
+    </main>
+
+    <script>
+        const feed = document.getElementById("cameraFeed");
+        const errorBox = document.getElementById("cameraError");
+        feed.addEventListener("error", () => { errorBox.style.display = "block"; });
+        function refreshFeed() {
+            errorBox.style.display = "none";
+            feed.src = "{{ url_for('video_feed') }}" + "?refresh=" + Date.now();
+        }
+    </script>
+</body>
+</html>

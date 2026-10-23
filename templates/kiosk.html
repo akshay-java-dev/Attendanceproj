@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171b35">
+    <title>Attendance Kiosk | SmartAttend</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="sa-kiosk-page">
+<header class="kiosk-topbar">
+    <a class="kiosk-brand" href="{{ url_for('index') }}">
+        <span class="kiosk-brand-mark">S</span>
+        <span>SmartAttend<small>LIVE ATTENDANCE KIOSK</small></span>
+    </a>
+    <div class="kiosk-live">
+        <span class="sa-live-dot"></span>
+        CAMERA STATION
+    </div>
+</header>
+
+<main class="kiosk-main">
+    <section class="kiosk-heading">
+        <div class="kiosk-eyebrow">TOUCH-FREE ATTENDANCE</div>
+        <h1>Look at the camera</h1>
+        <p>Stand in front of the camera. Keep your face visible and look straight ahead.</p>
+    </section>
+
+    <section class="kiosk-grid">
+        <div class="kiosk-camera-card">
+            <div class="kiosk-card-head">
+                <div>
+                    <span class="kiosk-camera-dot"></span>
+                    <strong>Live face recognition</strong>
+                </div>
+                <span class="kiosk-secure-label">LOCAL CAMERA</span>
+            </div>
+
+            <div class="kiosk-video-wrap">
+                <img src="{{ url_for('kiosk_video_feed') }}"
+                     alt="Live camera feed with face recognition"
+                     onerror="this.style.display='none'; document.getElementById('cameraFallback').style.display='flex';">
+
+                <div id="cameraFallback"
+                     class="kiosk-camera-fallback" style="display:none">
+                    <div class="kiosk-fallback-icon">◎</div>
+                    <strong>Camera feed unavailable</strong>
+                    <p>Check that your webcam is connected and the face models are installed.</p>
+                </div>
+
+                <div class="kiosk-corner kiosk-corner-tl"></div>
+                <div class="kiosk-corner kiosk-corner-tr"></div>
+                <div class="kiosk-corner kiosk-corner-bl"></div>
+                <div class="kiosk-corner kiosk-corner-br"></div>
+            </div>
+
+            <div class="kiosk-camera-foot">
+                <span><i></i> Video stream</span>
+                <span>Recognition runs on this computer</span>
+            </div>
+        </div>
+
+        <aside class="kiosk-side-card">
+            <div class="kiosk-side-icon">✓</div>
+            <h2>How to mark attendance</h2>
+
+            <ol class="kiosk-steps">
+                <li>
+                    <span>1</span>
+                    <div>
+                        <b>Face the camera</b>
+                        <small>Keep your full face visible in the frame.</small>
+                    </div>
+                </li>
+                <li>
+                    <span>2</span>
+                    <div>
+                        <b>Wait for recognition</b>
+                        <small>Use the clear photo registered by the administrator.</small>
+                    </div>
+                </li>
+                <li>
+                    <span>3</span>
+                    <div>
+                        <b>Attendance is recorded</b>
+                        <small>Each recognized student is recorded at most once per day.</small>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="kiosk-note">
+                <strong>Not recognized?</strong>
+                <p>Ask the administrator to check your registration photo. Try again in good lighting.</p>
+            </div>
+
+            <div class="kiosk-clock">
+                <span>LOCAL TIME</span>
+                <strong id="kioskClock">--:--:--</strong>
+                <small id="kioskDate">Loading date…</small>
+            </div>
+        </aside>
+    </section>
+
+    <footer class="kiosk-footer">
+        <span>SMARTATTEND</span>
+        <span>One person in frame at a time</span>
+        <a href="{{ url_for('login') }}">Admin sign in</a>
+    </footer>
+</main>
+
+<script>
+(function () {
+    const clock = document.getElementById("kioskClock");
+    const date = document.getElementById("kioskDate");
+
+    function updateClock() {
+        const now = new Date();
+        clock.textContent = now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+
+        date.textContent = now.toLocaleDateString([], {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+})();
+</script>
+<style>
+.attendance-popup {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translate(-50%, -130%);
+    opacity: 0;
+    z-index: 9999;
+    width: min(420px, calc(100% - 30px));
+    padding: 28px;
+    border-radius: 20px;
+    background: #ffffff;
+    color: #1d2a42;
+    box-shadow: 0 20px 65px rgba(0,0,0,.25);
+    text-align: center;
+    transition: transform .4s ease, opacity .4s ease;
+    pointer-events: none;
+}
+
+.attendance-popup.show {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+.attendance-popup-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 35px;
+    font-weight: 800;
+}
+
+.attendance-popup h2 {
+    margin: 0 0 10px;
+    color: #15803d;
+    font-size: 23px;
+}
+
+.attendance-popup p {
+    margin: 6px 0;
+}
+
+.attendance-popup small {
+    color: #64748b;
+}
+</style>
+
+<div id="attendancePopup"
+     class="attendance-popup"
+     role="status"
+     aria-live="polite">
+    <div class="attendance-popup-icon">✓</div>
+    <h2>Attendance Marked!</h2>
+    <p id="popupStudent"></p>
+    <p id="popupRoll"></p>
+    <small>Attendance recorded successfully</small>
+</div>
+
+<script>
+(function () {
+    const popup = document.getElementById("attendancePopup");
+    const studentText = document.getElementById("popupStudent");
+    const rollText = document.getElementById("popupRoll");
+
+    let lastEventId = 0;
+    let initialized = false;
+    let hideTimer = null;
+
+    function showPopup(event) {
+        studentText.textContent = "Student: " + event.student;
+        rollText.textContent = "Roll Number: " + event.roll_no;
+
+        popup.classList.add("show");
+
+        clearTimeout(hideTimer);
+
+        hideTimer = setTimeout(() => {
+            popup.classList.remove("show");
+        }, 3000);
+    }
+
+    async function checkAttendance() {
+        try {
+            const response = await fetch(
+                "/kiosk-events?since=" + lastEventId,
+                { cache: "no-store" }
+            );
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            if (!initialized) {
+                lastEventId = data.latest_id;
+                initialized = true;
+                return;
+            }
+
+            for (const event of data.events) {
+                showPopup(event);
+            }
+
+            lastEventId = data.latest_id;
+
+        } catch (error) {
+            console.error("Attendance notification error:", error);
+        }
+    }
+
+    checkAttendance();
+    setInterval(checkAttendance, 1000);
+})();
+</script>
+</body>
+</html>

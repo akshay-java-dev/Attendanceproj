@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Student" if mode == "edit" else "Add Student" }} | SmartAttend{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>{{ "Edit Student" if mode == "edit" else "Add New Student" }}</h1>
+        <p>Manage student details and register their face for attendance.</p>
+    </div>
+    <a href="{{ url_for('students') }}" class="btn btn-secondary">← Back to Students</a>
+</div>
+
+<div class="card">
+    <form method="POST" enctype="multipart/form-data" id="student-form">
+        <div class="form-group">
+            <label for="name">Student Name</label>
+            <input type="text" id="name" name="name"
+                   value="{{ student.name if student else '' }}"
+                   placeholder="Enter full name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="roll_no">Roll Number</label>
+            <input type="text" id="roll_no" name="roll_no"
+                   value="{{ student.roll_no if student else '' }}"
+                   placeholder="Enter roll number" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email"
+                   value="{{ student.email if student else '' }}"
+                   placeholder="Enter email address">
+        </div>
+
+        <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" name="department"
+                   value="{{ student.department if student else '' }}"
+                   placeholder="e.g. Computer Engineering" required>
+        </div>
+
+        <div class="form-group">
+            <label for="photo">Student Face Photo</label>
+            <p class="camera-help">Choose one option: upload a clear photo or capture a new photo using the webcam.</p>
+            <input type="file" id="photo" name="photo" accept="image/jpeg,image/png">
+            <small>Accepted formats: JPG and PNG. Only one person's face should be visible.</small>
+        </div>
+
+        <input type="hidden" id="captured_photo" name="captured_photo" value="">
+
+        <div class="form-group camera-panel">
+            <label>Capture from Live Camera</label>
+            <div class="camera-preview-wrap">
+                <video id="camera-preview" autoplay playsinline muted></video>
+                <img id="captured-preview" alt="Captured student face preview" hidden>
+                <div id="camera-placeholder" class="camera-placeholder">Camera preview will appear here</div>
+            </div>
+            <div class="camera-actions">
+                <button type="button" class="btn btn-secondary" id="start-camera">Open Camera</button>
+                <button type="button" class="btn btn-primary" id="capture-photo" disabled>Capture Photo</button>
+                <button type="button" class="btn btn-secondary" id="retake-photo" disabled>Retake</button>
+                <button type="button" class="btn btn-secondary" id="stop-camera" disabled>Stop Camera</button>
+            </div>
+            <small id="camera-status" role="status" aria-live="polite">Allow camera access when your browser asks.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                {{ "Update Student" if mode == "edit" else "Register Student" }}
+            </button>
+            <a href="{{ url_for('students') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.camera-help { margin: 0 0 10px; color: #718096; }
+.camera-preview-wrap { position: relative; width: 100%; max-width: 560px; min-height: 240px; background: #101828; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#camera-preview, #captured-preview { display: block; width: 100%; max-height: 420px; object-fit: contain; }
+#camera-preview[hidden], #captured-preview[hidden] { display: none; }
+.camera-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; color: #e5e7eb; text-align: center; }
+.camera-placeholder[hidden] { display: none; }
+.camera-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+#camera-status { display: block; margin-top: 8px; color: #718096; }
+</style>
+
+<script>
+(() => {
+    const video = document.getElementById('camera-preview');
+    const preview = document.getElementById('captured-preview');
+    const placeholder = document.getElementById('camera-placeholder');
+    const photoInput = document.getElementById('photo');
+    const capturedInput = document.getElementById('captured_photo');
+    const startButton = document.getElementById('start-camera');
+    const captureButton = document.getElementById('capture-photo');
+    const retakeButton = document.getElementById('retake-photo');
+    const stopButton = document.getElementById('stop-camera');
+    const status = document.getElementById('camera-status');
+    const form = document.getElementById('student-form');
+    let stream = null;
+
+    function stopStream() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+        stopButton.disabled = true;
+        captureButton.disabled = true;
+    }
+
+    startButton.addEventListener('click', async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            status.textContent = 'Camera access is unavailable. Open this site on localhost or use a supported browser.';
+            return;
+        }
+        try {
+            stopStream();
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = stream;
+            video.hidden = false;
+            preview.hidden = true;
+            placeholder.hidden = true;
+            await video.play();
+            captureButton.disabled = false;
+            stopButton.disabled = false;
+            status.textContent = 'Camera is on. Keep one face centered, then click Capture Photo.';
+        } catch (error) {
+            status.textContent = 'Could not open camera. Check browser camera permission and ensure no other app is using it.';
+        }
+    });
+
+    captureButton.addEventListener('click', () => {
+        if (!video.videoWidth || !video.videoHeight) {
+            status.textContent = 'Camera is not ready yet. Please wait a moment and try again.';
+            return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        capturedInput.value = dataUrl;
+        preview.src = dataUrl;
+        preview.hidden = false;
+        video.hidden = true;
+        placeholder.hidden = true;
+        photoInput.value = '';
+        captureButton.disabled = true;
+        retakeButton.disabled = false;
+        status.textContent = 'Photo captured. Check the preview, then register the student or retake it.';
+        stopStream();
+    });
+
+    retakeButton.addEventListener('click', async () => {
+        capturedInput.value = '';
+        preview.hidden = true;
+        placeholder.hidden = false;
+        retakeButton.disabled = true;
+        status.textContent = 'Open the camera to take another photo.';
+        startButton.click();
+    });
+
+    stopButton.addEventListener('click', () => {
+        stopStream();
+        video.hidden = true;
+        placeholder.hidden = false;
+        status.textContent = 'Camera stopped.';
+    });
+
+    photoInput.addEventListener('change', () => {
+        if (photoInput.files.length) {
+            capturedInput.value = '';
+            preview.hidden = true;
+            status.textContent = 'Uploaded photo selected. It will be used instead of a camera capture.';
+        }
+    });
+
+    form.addEventListener('submit', (event) => {
+        if (!photoInput.files.length && !capturedInput.value) {
+            event.preventDefault();
+            status.textContent = 'Please upload a face photo or capture one from the live camera.';
+            status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        stopStream();
+    });
+
+    window.addEventListener('beforeunload', stopStream);
+})();
+</script>
+{% endblock %}

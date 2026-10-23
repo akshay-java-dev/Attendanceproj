@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Attendance | SmartAttend</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sa-app">
+<aside class="sa-sidebar" id="sidebar">
+  <a class="sa-brand" href="{{ url_for('dashboard') }}"><span>S</span><b>SmartAttend<small>Admin workspace</small></b></a>
+  <nav>
+    <a class="sa-nav" href="{{ url_for('dashboard') }}">▦ Dashboard</a>
+    <a class="sa-nav" href="{{ url_for('students') }}">♙ Students</a>
+    <a class="sa-nav active" href="{{ url_for('attendance') }}">◷ Attendance</a>
+    <a class="sa-nav" href="{{ url_for('export_report') }}">▤ Export reports</a>
+    <a class="sa-nav" href="{{ url_for('camera') }}">◎ Face recognition</a>
+  </nav>
+  <div class="sa-sidebar-bottom">
+    <div class="sa-admin-mini"><span>{{ admin_username[0]|upper }}</span><div><b>{{ admin_username }}</b><small>Administrator</small></div></div>
+    <a class="sa-logout" href="{{ url_for('logout') }}">↪ Sign out</a>
+  </div>
+</aside>
+
+<main class="sa-main">
+  <header class="sa-topbar">
+    <button id="menuToggle" class="sa-menu" type="button" aria-label="Toggle menu">☰</button>
+    <div><small>WORKSPACE / RECORDS</small><h1>Attendance history</h1></div>
+    <a class="sa-btn sa-btn-primary" href="{{ url_for('camera') }}">◎ Start camera</a>
+  </header>
+
+  <div class="sa-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="sa-alert {{ category }}" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <section class="sa-section sa-directory">
+      <div class="sa-section-heading">
+        <div><h2>Attendance records</h2><p>Automatically recorded when an enrolled face is recognized.</p></div>
+        <a class="sa-btn sa-btn-light" href="{{ url_for('export_report') }}">↓ Export CSV</a>
+      </div>
+
+      <form class="sa-search" method="GET">
+        <input name="q" value="{{ search }}" placeholder="Search student, roll number or date…">
+        <button class="sa-btn sa-btn-primary" type="submit">Search</button>
+        {% if search %}<a class="sa-btn sa-btn-light" href="{{ url_for('attendance') }}">Clear</a>{% endif %}
+      </form>
+
+      <div class="sa-table-wrap">
+        <table class="sa-table">
+          <thead><tr><th>Student</th><th>Roll number</th><th>Department</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+          {% for r in records %}
+            <tr>
+              <td><b>{{ r['name'] }}</b></td>
+              <td>{{ r['roll_no'] }}</td>
+              <td>{{ r['department'] or '—' }}</td>
+              <td>{{ r['attendance_date'] }}</td>
+              <td>{{ r['attendance_time'] }}</td>
+              <td><span class="sa-status">{{ r['status'] }}</span></td>
+              <td>
+                <form method="POST" action="{{ url_for('remove_attendance', attendance_id=r['id']) }}"
+                      onsubmit="return confirm('Delete this attendance record?')">
+                  <button class="sa-btn sa-btn-danger sa-btn-small" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7" class="sa-empty"><span>◷</span><b>No attendance records yet</b><small>Start the camera and recognize an enrolled student.</small><a class="sa-btn sa-btn-primary" href="{{ url_for('camera') }}">Start camera →</a></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

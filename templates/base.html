@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}SmartAttend{% endblock %}</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="sa-app">
+<div class="sa-layout">
+    <aside class="sa-sidebar">
+        <a class="sa-brand" href="{{ url_for('dashboard') }}">
+            <span>S</span>
+            <b>SmartAttend
+                <small>Admin workspace</small>
+            </b>
+        </a>
+
+        <div class="sa-nav-label">Administration</div>
+        <nav>
+            <a class="sa-nav" href="{{ url_for('dashboard') }}">▦ Dashboard</a>
+            <a class="sa-nav" href="{{ url_for('students') }}">♙ Students</a>
+            <a class="sa-nav" href="{{ url_for('add_student') }}">＋ Register student</a>
+            <a class="sa-nav" href="{{ url_for('attendance') }}">◷ Attendance records</a>
+            <a class="sa-nav" href="{{ url_for('export_report') }}">▤ Export reports</a>
+        </nav>
+
+        <div class="sa-nav-label">Attendance station</div>
+        <nav>
+            <a class="sa-nav sa-nav-kiosk"
+               href="{{ url_for('kiosk') }}"
+               target="_blank" rel="noopener">
+                ◎ Open camera kiosk ↗
+            </a>
+        </nav>
+
+        <div class="sa-sidebar-bottom">
+            <div class="sa-admin-mini">
+                <span>{{ session.get('admin_username', 'A')[0]|upper }}</span>
+                <div>
+                    <b>{{ session.get('admin_username', 'Admin') }}</b>
+                    <small>Administrator</small>
+                </div>
+            </div>
+            <a class="sa-logout" href="{{ url_for('logout') }}">↪ Sign out</a>
+        </div>
+    </aside>
+
+    <main class="sa-main">
+        <header class="sa-topbar">
+            <div>
+                <small>SMARTATTEND / ADMIN PORTAL</small>
+                <h1>{% block page_heading %}Management{% endblock %}</h1>
+            </div>
+            <div class="sa-top-user">
+                <span class="sa-live-dot"></span>
+                System online
+            </div>
+        </header>
+
+        <div class="sa-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="sa-alert {{ category }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer class="sa-footer">
+            <span>SmartAttend · Administration workspace</span>
+            <span>Student management and attendance reports</span>
+        </footer>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

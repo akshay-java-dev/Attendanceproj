@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ "Edit" if mode == "edit" else "Register" }} Student | SmartAttend</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sa-app sa-form-page">
+<main class="sa-form-shell">
+  <a class="sa-back-link" href="{{ url_for('students') }}">← Back to students</a>
+
+  <section class="sa-form-card">
+    <div class="sa-form-icon">♙</div>
+    <div class="sa-eyebrow">STUDENT MANAGEMENT</div>
+    <h1>{{ "Edit student" if mode == "edit" else "Register a student" }}</h1>
+    <p class="sa-form-intro">Enter student details and enroll a clear face photo.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="sa-alert {{ category }}" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+      <div class="sa-form-grid">
+        <label class="sa-field">
+          <span>Full name <b>*</b></span>
+          <input name="name" required minlength="2" maxlength="100"
+                 value="{{ student['name'] if student else '' }}" placeholder="Enter full name">
+        </label>
+
+        <label class="sa-field">
+          <span>Roll number <b>*</b></span>
+          <input name="roll_no" required maxlength="50"
+                 value="{{ student['roll_no'] if student else '' }}" placeholder="e.g. CSE001">
+        </label>
+
+        <label class="sa-field">
+          <span>Email address</span>
+          <input name="email" type="email" maxlength="150"
+                 value="{{ student['email'] if student else '' }}" placeholder="student@example.com">
+        </label>
+
+        <label class="sa-field">
+          <span>Department</span>
+          {% set dept = student['department'] if student else '' %}
+          <select name="department">
+            <option value="">Select department</option>
+            {% for d in ['Computer Engineering','Information Technology','Civil Engineering','Mechanical Engineering','Electrical Engineering','Electronics Engineering'] %}
+              <option value="{{ d }}" {% if dept == d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <label class="sa-field sa-photo-field">
+        <span>Face photo {% if mode == "add" %}<b>*</b>{% endif %}</span>
+        <input type="file" name="photo" id="photoInput"
+               accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+               {% if mode == "add" %}required{% endif %}>
+        <small>JPG or PNG, maximum 5 MB. Use one clear, front-facing face.</small>
+        <img id="photoPreview" alt="Selected photo preview" hidden>
+        {% if mode == "edit" and student['photo_path'] %}
+          <small>A registered face photo already exists. Leave this blank to keep it.</small>
+        {% endif %}
+      </label>
+
+      <div class="sa-form-note">
+        <span>ⓘ</span>
+        <div><b>Face enrollment</b><br>
+          The system will detect one face and store its numerical representation for matching.
+          Only authorized administrators can use this page.
+        </div>
+      </div>
+
+      <div class="sa-form-actions">
+        <a class="sa-btn sa-btn-light" href="{{ url_for('students') }}">Cancel</a>
+        <button class="sa-btn sa-btn-primary" type="submit">
+          {{ "Save changes" if mode == "edit" else "Register student" }} →
+        </button>
+      </div>
+    </form>
+  </section>
+</main>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

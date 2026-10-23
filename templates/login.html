@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login | SmartAttend</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sa-app sa-login-page">
+  <main class="login-card">
+    <div class="login-logo">S</div>
+    <div class="sa-eyebrow">SMARTATTEND ADMINISTRATION</div>
+    <h1>Welcome back</h1>
+    <p class="sa-muted">Sign in to manage students and attendance.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="sa-alert {{ category }}" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <label class="sa-field">
+        <span>Username</span>
+        <input name="username" required autocomplete="username"
+               placeholder="Enter admin username">
+      </label>
+
+      <label class="sa-field login-password">
+        <span>Password</span>
+        <input name="password" type="password" required
+               autocomplete="current-password"
+               placeholder="Enter your password">
+      </label>
+
+      <button class="sa-btn sa-btn-primary login-submit" type="submit">
+        Sign in securely →
+      </button>
+    </form>
+
+    <p class="login-footnote">Restricted access · Authorized administrators only</p>
+  </main>
+</body>
+</html>

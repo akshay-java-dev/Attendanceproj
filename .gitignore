@@ -1,0 +1,16 @@
+@'
+.venv/
+venv/
+.idea/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+.env
+uploads/*
+known_faces/*
+desktop.ini
+link.txt
+gitignore..txt
+'@ | Set-Content -Encoding ascii .gitignore

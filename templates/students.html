@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Students | SmartAttend</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="sa-app">
+
+<aside class="sa-sidebar" id="sidebar">
+    <a class="sa-brand" href="{{ url_for('dashboard') }}">
+        <span class="sa-brand-icon">S</span>
+        <span>SmartAttend<small>ADMINISTRATION</small></span>
+    </a>
+
+    <div class="sa-nav-label">WORKSPACE</div>
+    <nav class="sa-nav">
+        <a href="{{ url_for('dashboard') }}"><span>▦</span> Dashboard</a>
+        <a class="active" href="{{ url_for('students') }}"><span>♙</span> Students</a>
+        <a href="{{ url_for('attendance') }}"><span>◷</span> Attendance</a>
+        <a href="{{ url_for('export_report') }}"><span>▤</span> Reports</a>
+    </nav>
+
+    <div class="sa-sidebar-bottom">
+        <div class="sa-admin-mini">
+            <span class="sa-avatar">{{ admin_username[0]|upper }}</span>
+            <span class="sa-admin-info">{{ admin_username }}<small>Administrator</small></span>
+        </div>
+        <a class="sa-logout" href="{{ url_for('logout') }}">↪ &nbsp; Sign out</a>
+    </div>
+</aside>
+
+<main class="sa-main">
+    <header class="sa-topbar">
+        <button class="sa-menu sa-menu-btn" id="menuToggle" aria-label="Toggle navigation">☰</button>
+        <div class="sa-breadcrumb">Workspace <span>/</span> <strong>Students</strong></div>
+        <div class="sa-top-right">
+            <span class="sa-status-dot"></span>
+            <span>System online</span>
+            <span class="sa-avatar">{{ admin_username[0]|upper }}</span>
+        </div>
+    </header>
+
+    <section class="sa-content">
+        <div class="sa-page-heading">
+            <div>
+                <div class="sa-eyebrow">PEOPLE &amp; RECORDS</div>
+                <h1>Students <span class="sa-heading-count">{{ total_students }}</span></h1>
+                <p>Manage student profiles and academic information in one place.</p>
+            </div>
+            <a href="{{ url_for('add_student') }}" class="sa-btn sa-btn-primary">
+                <span>＋</span> Add student
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="sa-alert {{ category }}" role="status">
+                    <span>{{ '✓' if category == 'success' else '!' }}</span>
+                    {{ message }}
+                    <button type="button" class="sa-alert-close" aria-label="Dismiss">×</button>
+                </div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="sa-stat-grid">
+            <article class="sa-stat-card">
+                <span class="sa-stat-icon icon-blue">♙</span>
+                <div><span class="sa-stat-label">Total students</span>
+                <strong>{{ total_students }}</strong>
+                <small>Registered in the database</small></div>
+            </article>
+            <article class="sa-stat-card">
+                <span class="sa-stat-icon icon-violet">⌕</span>
+                <div><span class="sa-stat-label">Search results</span>
+                <strong>{{ students|length }}</strong>
+                <small>Matching current filters</small></div>
+            </article>
+            <article class="sa-stat-card">
+                <span class="sa-stat-icon icon-green">✓</span>
+                <div><span class="sa-stat-label">Data storage</span>
+                <strong class="sa-stat-word">SQLite</strong>
+                <small>Local database connected</small></div>
+            </article>
+        </div>
+
+        <section class="sa-panel">
+            <div class="sa-panel-heading">
+                <div>
+                    <h2>All students</h2>
+                    <p>Search, filter and manage registered student records.</p>
+                </div>
+                <span class="sa-record-count">{{ students|length }} shown</span>
+            </div>
+
+            <form method="GET" action="{{ url_for('students') }}" class="sa-filter-bar" id="studentFilters">
+                <label class="sa-search-box">
+                    <span>⌕</span>
+                    <input type="search" name="q" id="studentSearch"
+                           value="{{ search }}"
+                           placeholder="Search name, roll number or email..."
+                           aria-label="Search students">
+                    <kbd>SEARCH</kbd>
+                </label>
+                <label class="sa-department-filter">
+                    <span class="sr-only">Filter department</span>
+                    <select name="department" id="departmentFilter">
+                        <option value="">All departments</option>
+                        {% for item in departments %}
+                            <option value="{{ item.department }}"
+                                {% if selected_department == item.department %}selected{% endif %}>
+                                {{ item.department }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button type="submit" class="sa-btn sa-btn-filter">Filter</button>
+                <a href="{{ url_for('students') }}" class="sa-reset-link">Reset</a>
+            </form>
+
+            <div class="sa-table-wrap">
+                <table class="sa-table">
+                    <thead>
+                    <tr>
+                        <th>STUDENT</th>
+                        <th>ROLL NUMBER</th>
+                        <th>DEPARTMENT</th>
+                        <th>EMAIL ADDRESS</th>
+                        <th>REGISTERED</th>
+                        <th class="sa-actions-heading">ACTIONS</th>
+                    </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                    {% for student in students %}
+                        <tr class="sa-student-row">
+                            <td>
+                                <div class="sa-student-cell">
+                                    <span class="sa-student-avatar avatar-{{ loop.index0 % 6 }}">
+                                        {{ student.name[0]|upper }}
+                                    </span>
+                                    <span class="sa-student-name">
+                                        <strong>{{ student.name }}</strong>
+                                        <small>Student ID: {{ student.id }}</small>
+                                    </span>
+                                </div>
+                            </td>
+                            <td><span class="sa-roll-pill">{{ student.roll_no }}</span></td>
+                            <td><span class="sa-department-text">{{ student.department or 'Not specified' }}</span></td>
+                            <td class="sa-email-cell">{{ student.email or '—' }}</td>
+                            <td class="sa-date-cell">
+                                {{ student.created_at[:10] if student.created_at else '—' }}
+                            </td>
+                            <td>
+                                <div class="sa-row-actions">
+                                    <a class="sa-icon-btn edit" title="Edit student"
+                                       aria-label="Edit {{ student.name }}"
+                                       href="{{ url_for('edit_student', student_id=student.id) }}">✎</a>
+                                    <form method="POST"
+                                          action="{{ url_for('delete_student', student_id=student.id) }}"
+                                          class="sa-delete-form"
+                                          data-student-name="{{ student.name }}">
+                                        <button type="submit" class="sa-icon-btn delete"
+                                                title="Delete student"
+                                                aria-label="Delete {{ student.name }}">⌫</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="sa-empty-state">
+                                    <span>♙</span>
+                                    <h3>No students found</h3>
+                                    <p>
+                                        {% if search or selected_department %}
+                                            Try changing your search or department filter.
+                                        {% else %}
+                                            Add your first student to start managing records.
+                                        {% endif %}
+                                    </p>
+                                    {% if search or selected_department %}
+                                        <a class="sa-btn sa-btn-filter" href="{{ url_for('students') }}">Clear filters</a>
+                                    {% else %}
+                                        <a class="sa-btn sa-btn-primary" href="{{ url_for('add_student') }}">＋ Add first student</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sa-table-footer">
+                <span>Showing <strong>{{ students|length }}</strong> of <strong>{{ total_students }}</strong> students</span>
+                <span>Changes are saved to your local database.</span>
+            </div>
+        </section>
+        <footer class="sa-footer">SmartAttend <span>·</span> Student administration</footer>
+    </section>
+</main>
+
+<div class="sa-confirm-overlay" id="deleteModal" hidden>
+    <section class="sa-confirm-dialog" role="dialog" aria-modal="true"
+             aria-labelledby="deleteTitle" aria-describedby="deleteDescription">
+        <div class="sa-confirm-icon">!</div>
+        <h2 id="deleteTitle">Delete student?</h2>
+        <p id="deleteDescription">This will permanently delete this student's record and associated attendance history.</p>
+        <div class="sa-confirm-actions">
+            <button type="button" class="sa-btn sa-btn-filter" id="cancelDelete">Cancel</button>
+            <button type="button" class="sa-btn sa-btn-danger" id="confirmDelete">Delete student</button>
+        </div>
+    </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
